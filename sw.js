@@ -1,6 +1,6 @@
-var CACHE_NAME = 'japan-education-v1';
+var CACHE_NAME = 'japan-education-v5';
 var APP_SHELL = [
-  './', './index.html', './alphabet.html', './lessons.html', './quiz.html', './profile.html',
+  './', './index.html', './alphabet.html', './lessons.html', './quiz.html', './profile.html', './levels.html',
   './app.js', './manifest.webmanifest', './DESIGN.md', './README.md'
 ];
 
