@@ -1,7 +1,7 @@
-var CACHE_NAME = 'japan-education-v5';
+var CACHE_NAME = 'japan-education-v6';
 var APP_SHELL = [
   './', './index.html', './alphabet.html', './lessons.html', './quiz.html', './profile.html', './levels.html',
-  './app.js', './manifest.webmanifest', './DESIGN.md', './README.md'
+  './app.js', './manifest.webmanifest', './assets/logo.png', './DESIGN.md', './README.md'
 ];
 
 self.addEventListener('install', function (event) {

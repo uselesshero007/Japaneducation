@@ -4,6 +4,24 @@
   var STORAGE_KEY = 'japanEducationProgress';
   var page = window.location.pathname.split('/').pop() || 'index.html';
   var state = loadState();
+  var kanaGojuon = [
+    ['a', 'あ', 'ア', 'আ'], ['i', 'い', 'イ', 'ই'], ['u', 'う', 'ウ', 'উ'], ['e', 'え', 'エ', 'এ'], ['o', 'お', 'オ', 'ও'],
+    ['ka', 'か', 'カ', 'কা'], ['ki', 'き', 'キ', 'কি'], ['ku', 'く', 'ク', 'কু'], ['ke', 'け', 'ケ', 'কে'], ['ko', 'こ', 'コ', 'কো'],
+    ['sa', 'さ', 'サ', 'সা'], ['shi', 'し', 'シ', 'শি'], ['su', 'す', 'ス', 'সু'], ['se', 'せ', 'セ', 'সে'], ['so', 'そ', 'ソ', 'সো'],
+    ['ta', 'た', 'タ', 'তা'], ['chi', 'ち', 'チ', 'চি'], ['tsu', 'つ', 'ツ', 'ৎসু'], ['te', 'て', 'テ', 'তে'], ['to', 'と', 'ト', 'তো'],
+    ['na', 'な', 'ナ', 'না'], ['ni', 'に', 'ニ', 'নি'], ['nu', 'ぬ', 'ヌ', 'নু'], ['ne', 'ね', 'ネ', 'নে'], ['no', 'の', 'ノ', 'নো'],
+    ['ha', 'は', 'ハ', 'হা'], ['hi', 'ひ', 'ヒ', 'হি'], ['fu', 'ふ', 'フ', 'ফু'], ['he', 'へ', 'ヘ', 'হে'], ['ho', 'ほ', 'ホ', 'হো'],
+    ['ma', 'ま', 'マ', 'মা'], ['mi', 'み', 'ミ', 'মি'], ['mu', 'む', 'ム', 'মু'], ['me', 'め', 'メ', 'মে'], ['mo', 'も', 'モ', 'মো'],
+    ['ya', 'や', 'ヤ', 'ইয়া'], ['yu', 'ゆ', 'ユ', 'ইউ'], ['yo', 'よ', 'ヨ', 'ইয়ো'],
+    ['ra', 'ら', 'ラ', 'রা'], ['ri', 'り', 'リ', 'রি'], ['ru', 'る', 'ル', 'রু'], ['re', 'れ', 'レ', 'রে'], ['ro', 'ろ', 'ロ', 'রো'],
+    ['wa', 'わ', 'ワ', 'ওয়া'], ['wo', 'を', 'ヲ', 'ও'], ['n', 'ん', 'ン', 'ন']
+  ].map(function (item) { return { romaji: item[0], hiragana: item[1], katakana: item[2], banglaPronunciation: item[3] }; });
+  var kanaCategories = {
+    Gojuon: kanaGojuon,
+    Dakuon: [['ga', 'が', 'ガ', 'গা'], ['gi', 'ぎ', 'ギ', 'গি'], ['gu', 'ぐ', 'グ', 'গু'], ['ge', 'げ', 'ゲ', 'গে'], ['go', 'ご', 'ゴ', 'গো'], ['za', 'ざ', 'ザ', 'জা'], ['ji', 'じ', 'ジ', 'জি'], ['zu', 'ず', 'ズ', 'জু'], ['ze', 'ぜ', 'ゼ', 'জে'], ['zo', 'ぞ', 'ゾ', 'জো'], ['da', 'だ', 'ダ', 'দা'], ['ji', 'ぢ', 'ヂ', 'জি'], ['zu', 'づ', 'ヅ', 'জু'], ['de', 'で', 'デ', 'দে'], ['do', 'ど', 'ド', 'দো'], ['ba', 'ば', 'バ', 'বা'], ['bi', 'び', 'ビ', 'বি'], ['bu', 'ぶ', 'ブ', 'বু'], ['be', 'べ', 'ベ', 'বে'], ['bo', 'ぼ', 'ボ', 'বো']].map(function (item) { return { romaji: item[0], hiragana: item[1], katakana: item[2], banglaPronunciation: item[3] }; }),
+    Handakuon: [['pa', 'ぱ', 'パ', 'পা'], ['pi', 'ぴ', 'ピ', 'পি'], ['pu', 'ぷ', 'プ', 'পু'], ['pe', 'ぺ', 'ペ', 'পে'], ['po', 'ぽ', 'ポ', 'পো']].map(function (item) { return { romaji: item[0], hiragana: item[1], katakana: item[2], banglaPronunciation: item[3] }; }),
+    Yoon: [['kya', 'きゃ', 'キャ', 'ক্যা'], ['kyu', 'きゅ', 'キュ', 'কিউ'], ['kyo', 'きょ', 'キョ', 'কিয়ো'], ['sha', 'しゃ', 'シャ', 'শা'], ['shu', 'しゅ', 'シュ', 'শু'], ['sho', 'しょ', 'ショ', 'শো'], ['cha', 'ちゃ', 'チャ', 'চা'], ['chu', 'ちゅ', 'チュ', 'চু'], ['cho', 'ちょ', 'チョ', 'চো']].map(function (item) { return { romaji: item[0], hiragana: item[1], katakana: item[2], banglaPronunciation: item[3] }; })
+  };
   var curriculum = {
     N5: {
       title: 'Foundation',
@@ -225,19 +243,34 @@
     panel.id = 'je-script-panel';
     panel.className = 'px-4 py-4';
     tabSection.after(panel);
-    var scripts = {
-      katakana: [{ char: 'ア', reading: 'a', pronunciation: 'আ', meaning: 'first sound in アイス (ice cream)' }, { char: 'カ', reading: 'ka', pronunciation: 'কা', meaning: 'カメラ (camera)' }, { char: 'サ', reading: 'sa', pronunciation: 'সা', meaning: 'サラダ (salad)' }, { char: 'タ', reading: 'ta', pronunciation: 'তা', meaning: 'タクシー (taxi)' }, { char: 'ナ', reading: 'na', pronunciation: 'না', meaning: 'ナイフ (knife)' }],
-      kanji: [{ char: '人', reading: 'ひと', pronunciation: 'হিতো', meaning: 'person / মানুষ' }, { char: '学', reading: 'がく', pronunciation: 'গাকু', meaning: 'study / পড়াশোনা' }, { char: '校', reading: 'こう', pronunciation: 'কোও', meaning: 'school / স্কুল' }, { char: '食', reading: 'しょく', pronunciation: 'শোকু', meaning: 'food / খাবার' }, { char: '水', reading: 'みず', pronunciation: 'মিজু', meaning: 'water / পানি' }]
-    };
+    var activeScript = 'hiragana';
+    var selectedCategory = 'Gojuon';
+    var kanjiData = [{ char: '人', reading: 'ひと', onyomi: 'ジン', kunyomi: 'ひと', pronunciation: 'হিতো', english: 'person', bangla: 'মানুষ', example: '日本人 • Japanese person' }, { char: '学', reading: 'がく', onyomi: 'ガク', kunyomi: 'まなぶ', pronunciation: 'গাকু', english: 'study', bangla: 'পড়াশোনা', example: '学校 • school' }, { char: '食', reading: 'しょく', onyomi: 'ショク', kunyomi: 'たべる', pronunciation: 'শোকু', english: 'eat / food', bangla: 'খাওয়া / খাবার', example: '食べる • to eat' }, { char: '水', reading: 'みず', onyomi: 'スイ', kunyomi: 'みず', pronunciation: 'মিজু', english: 'water', bangla: 'পানি', example: '水を飲む • drink water' }];
+    function kanaCard(item, mode) {
+      var character = mode === 'katakana' ? item.katakana : item.hiragana;
+      return '<button class="je-script-card bg-surface-container-low p-3 rounded-xl text-left" data-speak="' + character + '"><strong class="text-primary text-[28px]">' + character + '</strong><span class="block font-label-sm text-label-sm">' + item.romaji.toUpperCase() + ' • ' + item.banglaPronunciation + '</span><small class="text-secondary">' + item.hiragana + ' ↔ ' + item.katakana + '</small></button>';
+    }
+    function renderKanaPanel(mode) {
+      var title = mode === 'hiragana' ? 'Hiragana • ひらがな' : 'Katakana • カタカナ';
+      panel.innerHTML = '<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm"><h2 class="font-headline-sm text-headline-sm text-on-surface">' + title + '</h2><p class="font-body-sm text-body-sm text-secondary">Romaji → Japanese → Bangla pronunciation</p><div class="grid grid-cols-2 gap-2 mt-3">' + kanaCategories[selectedCategory].map(function (item) { return kanaCard(item, mode); }).join('') + '</div></div>';
+    }
+    function renderKanjiPanel() {
+      panel.innerHTML = '<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm"><h2 class="font-headline-sm text-headline-sm text-on-surface">Kanji learning • 漢字</h2><p class="font-body-sm text-body-sm text-secondary">Reading, Onyomi, Kunyomi, English, Bangla and practice</p><div class="grid gap-2 mt-3">' + kanjiData.map(function (item) { return '<button class="je-script-card bg-surface-container-low p-3 rounded-xl text-left" data-speak="' + item.char + '"><strong class="text-primary text-[28px]">' + item.char + '</strong><span class="block font-label-sm text-label-sm">Reading: ' + item.reading + ' • ' + item.pronunciation + '</span><small class="block text-secondary">Onyomi: ' + item.onyomi + ' • Kunyomi: ' + item.kunyomi + '</small><small class="block text-secondary">' + item.english + ' • ' + item.bangla + ' • ' + item.example + '</small></button>'; }).join('') + '</div></div>';
+    }
     function show(name) {
       var isHiragana = name === 'hiragana';
+      activeScript = name;
       following.forEach(function (section) { section.style.display = isHiragana ? '' : 'none'; });
-      panel.style.display = isHiragana ? 'none' : '';
-      if (!isHiragana) panel.innerHTML = '<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm"><h2 class="font-headline-sm text-headline-sm text-on-surface">' + (name === 'katakana' ? 'Katakana practice • カタカナ' : 'Kanji basics • 漢字') + '</h2><p class="font-body-sm text-body-sm text-secondary">Japanese • Bangla pronunciation • English meaning</p><div class="grid grid-cols-2 gap-2 mt-3">' + scripts[name].map(function (item) { return '<button class="je-script-card bg-surface-container-low p-3 rounded-xl text-left" data-speak="' + item.char + '"><strong class="text-primary text-[28px]">' + item.char + '</strong><span class="block font-label-sm text-label-sm">' + item.reading + ' • ' + item.pronunciation + '</span><small class="text-secondary">' + item.meaning + '</small></button>'; }).join('') + '</div></div>';
+      panel.style.display = '';
+      if (name === 'kanji') renderKanjiPanel(); else renderKanaPanel(name);
       document.querySelectorAll('#tab-hiragana,#tab-katakana,#tab-kanji').forEach(function (button) { button.classList.toggle('bg-surface-container-lowest', button.id === 'tab-' + name); button.classList.toggle('text-primary', button.id === 'tab-' + name); });
     }
     ['hiragana', 'katakana', 'kanji'].forEach(function (name) { var button = document.getElementById('tab-' + name); if (button) button.addEventListener('click', function () { show(name); }); });
     show('hiragana');
+    Object.keys(kanaCategories).forEach(function (category) {
+      var categoryButton = Array.from(document.querySelectorAll('main button')).find(function (button) { return button.textContent.indexOf(category) !== -1; });
+      if (categoryButton) categoryButton.addEventListener('click', function () { selectedCategory = category; if (activeScript !== 'kanji') renderKanaPanel(activeScript); });
+    });
     document.querySelectorAll('main button').forEach(function (button) {
       if (button.id || button.classList.contains('kana-card')) return;
       button.addEventListener('click', function () {
