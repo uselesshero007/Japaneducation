@@ -4,6 +4,7 @@
   var STORAGE_KEY = 'japanEducationProgress';
   var page = window.location.pathname.split('/').pop() || 'index.html';
   var state = loadState();
+  var kanjiCatalog = [];
   var kanaGojuon = [
     ['a', 'あ', 'ア', 'আ'], ['i', 'い', 'イ', 'ই'], ['u', 'う', 'ウ', 'উ'], ['e', 'え', 'エ', 'এ'], ['o', 'お', 'オ', 'ও'],
     ['ka', 'か', 'カ', 'কা'], ['ki', 'き', 'キ', 'কি'], ['ku', 'く', 'ク', 'কু'], ['ke', 'け', 'ケ', 'কে'], ['ko', 'こ', 'コ', 'কো'],
@@ -118,9 +119,26 @@
     window.speechSynthesis.speak(utterance);
   }
 
+  function loadKanjiCatalog() {
+    fetch('assets/kanji-data.json').then(function (response) { return response.json(); }).then(function (source) {
+      var bangla = { '一': ['এক', 'ইচি'], '二': ['দুই', 'নি'], '三': ['তিন', 'সান'], '日': ['দিন / সূর্য', 'হি / নিচি'], '月': ['মাস / চাঁদ', 'গেতসু / সুকি'], '人': ['মানুষ', 'হিতো'], '学': ['পড়াশোনা', 'গাকু'], '食': ['খাওয়া / খাবার', 'তাবেরু'], '水': ['পানি', 'মিজু'], '年': ['বছর', 'তোশি'] };
+      kanjiCatalog = Object.keys(source).map(function (character) {
+        var item = source[character];
+        return { character: character, level: item.jlpt_new === 5 ? 'N5' : (item.jlpt_new === 4 ? 'N4' : 'N3'), frequency: item.freq || 99999, onyomi: (item.readings_on || []).join('・'), kunyomi: (item.readings_kun || []).join('・'), reading: (item.readings_kun || item.readings_on || [''])[0], romaji: '', english: (item.meanings || []).join(' / '), bangla: bangla[character] ? bangla[character][0] : '', pronunciation: bangla[character] ? bangla[character][1] : '', exampleWord: '', exampleRomaji: '', exampleEnglish: '', exampleBangla: '' };
+      }).filter(function (item) { return item.level === 'N5' || item.level === 'N4' || item.level === 'N3'; }).sort(function (left, right) { return left.frequency - right.frequency || left.level.localeCompare(right.level); }).slice(0, 500);
+      window.dispatchEvent(new Event('je-kanji-data-ready'));
+    }).catch(function () { /* The existing local Kanji fallback remains available. */ });
+  }
+
   function updateProgress() {
     document.querySelectorAll('[data-study-streak]').forEach(function (element) { element.textContent = state.streak + ' Days'; });
     document.querySelectorAll('[data-daily-minutes]').forEach(function (element) { element.textContent = Math.min(state.dailyMinutes, 20) + ' / 20 minutes'; });
+  }
+
+  function updateFooterBranding() {
+    document.querySelectorAll('span').forEach(function (element) {
+      if (element.textContent.indexOf('Version 3.2.0') !== -1) element.textContent = 'Version 2026 september > Md injamam ul haque for Bengali Nihongo Learners';
+    });
   }
 
   function levelProgress(level) {
@@ -255,7 +273,18 @@
       panel.innerHTML = '<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm"><h2 class="font-headline-sm text-headline-sm text-on-surface">' + title + '</h2><p class="font-body-sm text-body-sm text-secondary">Romaji → Japanese → Bangla pronunciation</p><div class="grid grid-cols-2 gap-2 mt-3">' + kanaCategories[selectedCategory].map(function (item) { return kanaCard(item, mode); }).join('') + '</div></div>';
     }
     function renderKanjiPanel() {
-      panel.innerHTML = '<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm"><h2 class="font-headline-sm text-headline-sm text-on-surface">Kanji learning • 漢字</h2><p class="font-body-sm text-body-sm text-secondary">Reading, Onyomi, Kunyomi, English, Bangla and practice</p><div class="grid gap-2 mt-3">' + kanjiData.map(function (item) { return '<button class="je-script-card bg-surface-container-low p-3 rounded-xl text-left" data-speak="' + item.char + '"><strong class="text-primary text-[28px]">' + item.char + '</strong><span class="block font-label-sm text-label-sm">Reading: ' + item.reading + ' • ' + item.pronunciation + '</span><small class="block text-secondary">Onyomi: ' + item.onyomi + ' • Kunyomi: ' + item.kunyomi + '</small><small class="block text-secondary">' + item.english + ' • ' + item.bangla + ' • ' + item.example + '</small></button>'; }).join('') + '</div></div>';
+      var records = kanjiCatalog.length ? kanjiCatalog : kanjiData.map(function (item) { return { character: item.char, level: 'N5', reading: item.reading, onyomi: item.onyomi, kunyomi: item.kunyomi, pronunciation: item.pronunciation, english: item.english, bangla: item.bangla, exampleWord: item.example, exampleEnglish: '', exampleBangla: '' }; });
+      panel.innerHTML = '<div class="bg-surface-container-lowest rounded-xl p-4 shadow-sm"><h2 class="font-headline-sm text-headline-sm text-on-surface">Kanji learning • 漢字</h2><p class="font-body-sm text-body-sm text-secondary">' + records.length + ' local N5-N3 Kanji • search by character, Romaji, English or Bangla</p><div class="flex gap-2 mt-3"><input id="je-kanji-search" class="min-w-0 flex-1 rounded-lg bg-surface-container-low p-2" type="search" placeholder="Search 漢字, English or বাংলা"><select id="je-kanji-level" class="rounded-lg bg-surface-container-low p-2"><option value="all">All</option><option>N5</option><option>N4</option><option>N3</option></select></div><div id="je-kanji-results" class="grid gap-2 mt-3"></div></div>';
+      var results = panel.querySelector('#je-kanji-results');
+      function updateResults() {
+        var query = panel.querySelector('#je-kanji-search').value.toLowerCase().trim();
+        var level = panel.querySelector('#je-kanji-level').value;
+        var matches = records.filter(function (item) { var haystack = [item.character, item.reading, item.romaji, item.english, item.bangla, item.pronunciation].join(' ').toLowerCase(); return (level === 'all' || item.level === level) && (!query || haystack.indexOf(query) !== -1); }).slice(0, query ? 100 : 40);
+        results.innerHTML = matches.map(function (item) { return '<button class="je-script-card bg-surface-container-low p-3 rounded-xl text-left" data-speak="' + item.character + '"><strong class="text-primary text-[28px]">' + item.character + '</strong><span class="block font-label-sm text-label-sm">' + item.level + ' • Reading: ' + (item.reading || 'See readings') + ' • ' + (item.pronunciation || 'Bangla pronunciation') + '</span><small class="block text-secondary">Onyomi: ' + (item.onyomi || '—') + ' • Kunyomi: ' + (item.kunyomi || '—') + '</small><small class="block text-secondary">' + (item.english || 'Meaning available in source data') + (item.bangla ? ' • ' + item.bangla : '') + '</small></button>'; }).join('') || '<p class="text-secondary">No matching Kanji found.</p>';
+      }
+      panel.querySelector('#je-kanji-search').addEventListener('input', updateResults);
+      panel.querySelector('#je-kanji-level').addEventListener('change', updateResults);
+      updateResults();
     }
     function show(name) {
       var isHiragana = name === 'hiragana';
@@ -266,6 +295,7 @@
       document.querySelectorAll('#tab-hiragana,#tab-katakana,#tab-kanji').forEach(function (button) { button.classList.toggle('bg-surface-container-lowest', button.id === 'tab-' + name); button.classList.toggle('text-primary', button.id === 'tab-' + name); });
     }
     ['hiragana', 'katakana', 'kanji'].forEach(function (name) { var button = document.getElementById('tab-' + name); if (button) button.addEventListener('click', function () { show(name); }); });
+    window.addEventListener('je-kanji-data-ready', function () { if (activeScript === 'kanji') renderKanjiPanel(); });
     show('hiragana');
     Object.keys(kanaCategories).forEach(function (category) {
       var categoryButton = Array.from(document.querySelectorAll('main button')).find(function (button) { return button.textContent.indexOf(category) !== -1; });
@@ -351,8 +381,10 @@
   addSplash();
   addOfflineStatus();
   wireLearningActions();
+  updateFooterBranding();
   addLevelLink();
   setupAlphabetTabs();
   renderLevels();
+  loadKanjiCatalog();
   registerWorker();
 }());
