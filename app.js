@@ -48,7 +48,7 @@
     sessionStorage.setItem('jeSplashShown', '1');
     var splash = document.createElement('div');
     splash.className = 'je-splash';
-    splash.innerHTML = '<div class="je-splash-mark" data-logo-slot aria-label="App logo placeholder"></div><strong>Japan Education</strong><span>Create by Md Injamam Ul Haque</span>';
+    splash.innerHTML = '<img class="je-splash-logo" src="assets/logo.png" alt="Japan Education logo"><strong>Japan Education</strong><span>Create by</span><b>Md Injamam Ul Haque</b>';
     document.body.appendChild(splash);
     window.setTimeout(function () { splash.classList.add('je-splash-hide'); window.setTimeout(function () { splash.remove(); }, 350); }, 900);
   }
@@ -125,6 +125,8 @@
   }
 
   function registerWorker() {
+    var headerLogo = document.querySelector('img[alt="Japan Education Logo"]');
+    if (headerLogo) headerLogo.src = 'assets/logo.png';
     var manifest = document.createElement('link');
     manifest.rel = 'manifest';
     manifest.href = 'manifest.webmanifest';
@@ -138,7 +140,7 @@
 
   function injectStyles() {
     var style = document.createElement('style');
-    style.textContent = '.je-splash{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:#f8f9ff;color:#0b1c30;font-family:Plus Jakarta Sans,Noto Sans,sans-serif;opacity:1;transition:opacity .35s ease}.je-splash strong{font-size:24px;color:#b7131a}.je-splash span{font-size:12px;color:#545f73}.je-splash-mark{width:64px;height:64px;border:2px dashed #b7131a;border-radius:16px;background:transparent}.je-splash-hide{opacity:0;pointer-events:none}.je-offline-status{position:fixed;left:12px;right:12px;bottom:72px;z-index:60;padding:9px 12px;border-radius:10px;background:#0b1c30;color:#fff;font:600 12px/1.4 Plus Jakarta Sans,Noto Sans,sans-serif;text-align:center;opacity:0;transform:translateY(8px);transition:opacity .2s ease,transform .2s ease;pointer-events:none}.je-offline-status.je-visible{opacity:1;transform:translateY(0)}';
+    style.textContent = '.je-splash{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:#f8f9ff;color:#0b1c30;font-family:Plus Jakarta Sans,Noto Sans,sans-serif;opacity:1;transition:opacity .35s ease}.je-splash-logo{width:128px;height:128px;object-fit:cover;border-radius:50%;box-shadow:0 8px 24px rgba(11,28,48,.16);margin-bottom:8px}.je-splash strong{font-size:24px;color:#b7131a}.je-splash span{font-size:12px;color:#545f73}.je-splash b{font-size:14px;color:#0b1c30}.je-splash-hide{opacity:0;pointer-events:none}.je-offline-status{position:fixed;left:12px;right:12px;bottom:72px;z-index:60;padding:9px 12px;border-radius:10px;background:#0b1c30;color:#fff;font:600 12px/1.4 Plus Jakarta Sans,Noto Sans,sans-serif;text-align:center;opacity:0;transform:translateY(8px);transition:opacity .2s ease,transform .2s ease;pointer-events:none}.je-offline-status.je-visible{opacity:1;transform:translateY(0)}';
     document.head.appendChild(style);
   }
 
